@@ -1,16 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-// import App from './App';
+import App from './App';
 import reportWebVitals from './reportWebVitals';
-// import MinPrice from './components/minPrice';
-import Navigation from './navigation';
 
 ReactDOM.render(
   <React.StrictMode>
-    {/* <App /> */}
-    {/* <MinPrice /> */}
-    <Navigation />
+    <App />
   </React.StrictMode>,
   document.getElementById('root')
 );

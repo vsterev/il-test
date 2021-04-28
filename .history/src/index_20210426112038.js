@@ -10,7 +10,7 @@ ReactDOM.render(
   <React.StrictMode>
     {/* <App /> */}
     {/* <MinPrice /> */}
-    <Navigation />
+    <Navigatio />
   </React.StrictMode>,
   document.getElementById('root')
 );
