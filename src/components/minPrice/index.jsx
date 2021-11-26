@@ -4,8 +4,9 @@ const MinPrice = () => {
   const [details, setDetails] = useState({
     checkIn: '',
     checkOut: '',
-    cityKey: '68',
-    pageSize: '400',
+    cityKey: '', //68 Synny Beach
+    regionKey:'', //2 varna, 3 bourgas
+    pageSize: '400000',
     rowIndexFrom: '',
     cacheGuid: '',
     serviceType: 'eval',
@@ -18,13 +19,13 @@ const MinPrice = () => {
     setDetails({ ...details, checkIn: e.target.value, checkOut: e.target.value });
   };
   const [prices, setPrices] = useState([]);
-  const [request, setRequest] = useState({ view: false, result: '' });
+  const [request, setRequest] = useState({ view: false, result: '', loading:false });
   const [totalCount, setTotalCount] = useState('');
   const serviceReset = () => {
     setDetails({ ...details, cacheGuid: '', rowIndexFrom: '' });
     setTotalCount('');
     setPrices([]);
-    setRequest('');
+    setRequest({ view: false, result: '', loading:false });
   };
   function childrenAgesRender(num) {
     let html = [];
@@ -58,6 +59,7 @@ const MinPrice = () => {
   const submitHandler = (e) => {
     e.preventDefault();
     console.log(details);
+    setRequest({...request, loading:true})
     InterLookServices.minPrices({
       checkIn: details.checkIn,
       checkOut: details.checkOut,
@@ -68,11 +70,12 @@ const MinPrice = () => {
       serviceType: details.serviceType,
       adults: details.adults,
       children: details.children,
+      regionKey: details.regionKey
     })
       .then((result) => {
         // setPrices([result.a]);
         console.log(result);
-        setRequest({ view: true, result: result.requeststr });
+        setRequest({ view: true, result: result.requeststr, loading: false });
         setPrices([...prices, ...result.arrPrices]);
         setDetails({ ...details, cacheGuid: result.cacheGuid, rowIndexFrom: result.totalCount });
         setTotalCount(result.totalCount);
@@ -103,6 +106,14 @@ const MinPrice = () => {
             size="2"
             value={details.cityKey}
             onChange={(e) => setDetails({ ...details, cityKey: e.target.value })}
+          />
+          <label htmlFor="cityKey">region key: </label>
+           <input
+            type="text"
+            id="regionKey"
+            size="2"
+            value={details.regionKey}
+            onChange={(e) => setDetails({ ...details, regionKey: e.target.value })}
           />
           <label htmlFor="adults">adults: </label>
           <input
@@ -184,19 +195,20 @@ const MinPrice = () => {
             onChange={(e) => setDetails({ ...details, cacheGuid: e.target.value })}
           />
         </fieldset>
-        <button>Submit</button>
+        <button disabled={details.checkIn===details.checkOut}>Submit</button>
       </form>
       <button onClick={() => console.log(request.result)} disabled={!request.view}>
         view request
       </button>
       <button onClick={serviceReset}>clear service params</button>
       <button onClick={() => console.log(details)}>view details</button>
-      {/* {!!request && <div>request: {request}</div>} */}
+      {/* {!!request.loading && <div>request: {request}</div>} */}
+      {!!request.loading &&<div>Loading ...</div>}
       {!!prices &&
         prices.map((el, i) => {
           return (
             <div key={i}>
-              {i + 1}, {el.id}, {el.hotel}, {el.roomType}, {el.accommodation}, {el.price}{' '}
+              {i + 1}, {el.id}, {el.hotel}, {el.roomType}, {el.accommodation}, {el.priceAddWithCost}{' '}
             </div>
           );
         })}
