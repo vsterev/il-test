@@ -5,8 +5,13 @@ const InterlookServices = {
       method: 'POST',
       headers: { 'Content-type': 'application/json' },
     })
-      .then((res) => res.json())
-      .catch((e) => console.error(e));
+      .then((res) => {
+        if(res.status===204) {
+          throw new Error('error fetching prices from endpoint')
+        }
+      return res.json();
+    })
+      // .catch((e) => console.log(e));
   },
 };
 export default InterlookServices;

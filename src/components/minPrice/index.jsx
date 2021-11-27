@@ -21,11 +21,17 @@ const MinPrice = () => {
   const [prices, setPrices] = useState([]);
   const [request, setRequest] = useState({ view: false, result: '', loading:false });
   const [totalCount, setTotalCount] = useState('');
+  const [time, setTime] = useState('')
+  const [hotelsCount, setHotelsCount] = useState(0);
+  const [errFetching, setErrFetching]=useState('')
   const serviceReset = () => {
     setDetails({ ...details, cacheGuid: '', rowIndexFrom: '' });
     setTotalCount('');
+    setTime('');
     setPrices([]);
     setRequest({ view: false, result: '', loading:false });
+    setErrFetching('');
+
   };
   function childrenAgesRender(num) {
     let html = [];
@@ -59,8 +65,12 @@ const MinPrice = () => {
   const submitHandler = (e) => {
     e.preventDefault();
     console.log(details);
+    const start = new Date();
+    setTime('');
+    setHotelsCount(0);
+    setErrFetching('');
     setRequest({...request, loading:true})
-    InterLookServices.minPrices({
+   return Promise.all([start,InterLookServices.minPrices({
       checkIn: details.checkIn,
       checkOut: details.checkOut,
       pageSize: details.pageSize,
@@ -71,19 +81,29 @@ const MinPrice = () => {
       adults: details.adults,
       children: details.children,
       regionKey: details.regionKey
-    })
-      .then((result) => {
+    })])
+      .then(([start,result]) => {
         // setPrices([result.a]);
+        const end = new Date();
+        const fetchingTime = (end - start) / 1000
+        setTime(fetchingTime)
         console.log(result);
         setRequest({ view: true, result: result.requeststr, loading: false });
         setPrices([...prices, ...result.arrPrices]);
+        setHotelsCount(result.arrPrices.length)
         setDetails({ ...details, cacheGuid: result.cacheGuid, rowIndexFrom: result.totalCount });
         setTotalCount(result.totalCount);
 
         // setDetails({ ...details, cacheGuid: result.cacheGuid });
         // setDetails({ ...details, rowIndexFrom: result.rowIndexFrom });
       })
-      .catch(console.log);
+      .catch(err=>{
+        console.error(err.message)
+        setErrFetching(err.message);
+        setRequest({...request, loading: false});
+        setPrices([]);
+
+      });
   };
   return (
     <React.Fragment>
@@ -195,7 +215,7 @@ const MinPrice = () => {
             onChange={(e) => setDetails({ ...details, cacheGuid: e.target.value })}
           />
         </fieldset>
-        <button disabled={details.checkIn===details.checkOut}>Submit</button>
+        <button disabled={(details.checkIn===details.checkOut)||details.cityKey===''&&details.regionKey===''}>Submit</button>
       </form>
       <button onClick={() => console.log(request.result)} disabled={!request.view}>
         view request
@@ -204,14 +224,17 @@ const MinPrice = () => {
       <button onClick={() => console.log(details)}>view details</button>
       {/* {!!request.loading && <div>request: {request}</div>} */}
       {!!request.loading &&<div>Loading ...</div>}
-      {!!prices &&
+      {!!time&&<div>Fetching time {time} sec. for {hotelsCount} hotels
+      </div>}
+      {!!errFetching&&<div style={{color:'red'}}>{errFetching}</div>}
+      {!!prices.length!==0 &&
         prices.map((el, i) => {
-          return (
-            <div key={i}>
+          return ( <div key={i}>
               {i + 1}, {el.id}, {el.hotel}, {el.roomType}, {el.accommodation}, {el.priceAddWithCost}{' '}
             </div>
           );
-        })}
+        })
+        }
     </React.Fragment>
   );
 };
